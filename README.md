@@ -1,6 +1,6 @@
 ## What is the Web-Pwn?
 
-The term 'Pwn' typically refers to binary exploitation through memory corruption vulnerabilities in CTF. While, 'Web' focuses on exploiting vulnerabilities in the modern web world, such as XSS, CSRF, and SQL injection, which primarily are injection-based vulnerabilities. 'Web-Pwn' is a specialized term that describes the exploitation of memory-related vulnerabilities within essential web components like browsers, JavaScript runtimes, PHP runtimes, and others. These vulnerabilities can be triggered by an attacker through specific web-based operations.
+The term 'pwn' typically refers to binary exploitation through memory corruption vulnerabilities in CTF. While, 'web' focuses on exploiting vulnerabilities in the modern web world, such as XSS, CSRF, and SQL injection, which primarily are injection-based vulnerabilities. 'Web-Pwn' is a specialized term that describes the exploitation of memory-related vulnerabilities within essential web components like browsers, JavaScript runtimes, PHP runtimes, and others. These vulnerabilities can be triggered by an attacker through specific web-based operations.
 
 This repository is used to collect a list of ctf challenges of 'Web-Pwn' with the description, attachments, exp and writeups.
 
