@@ -11,7 +11,7 @@ This repository is used to collect a list of ctf challenges of 'web-pwn' with th
 | Artifact | Version | Time        | Vuln Description                      | CTF        | Challenge |
 | -------- | ------- | ----------- | ------------------------------------- | ---------- | --------- |
 | V8       | b027d36 | 2019-Apr-05 | Manually introduced oob vulnerability | \*CTF 2019 | oob-v8    |
-| V8       | b027d36 | 2019-Apr-05 | Manually introduced oob vulnerability | \*CTF 2019 | oob-v8    |
+| V8       | b027d36 | 2024-Sep-22 | Manually introduced oob vulnerability | PatriotCTF 2024 | babyxss |
 
 
 ## Deployment
