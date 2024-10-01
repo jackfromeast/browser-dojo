@@ -9,7 +9,7 @@ The Browser Dojo is a collection of recent browser-related pwn challenges, inclu
 
 | Artifact | Version | Time        | Vuln Description                      | CTF        | Challenge |
 | -------- | ------- | ----------- | ------------------------------------- | ---------- | --------- |
-| V8       | 7.5.0 | 2019-Apr-05 | Manually introduced oob vulnerability | \*CTF 2019 | oob-v8    |
+| V8       | 7.5.0   | 2019-Apr-05 | Manually introduced oob vulnerability | \*CTF 2019 | oob-v8    |
 | V8       | 11.9.99 | 2024-Sep-22 | Manually introduced oob vulnerability | PatriotCTF 2024 | babyxss |
 
 
