@@ -1,10 +1,9 @@
-## What is the web-pwn?
+## What is the Browser Dojo?
 
-The 'web-pwn' is a term that describes the exploitation of memory-related vulnerabilities within essential web components like browsers, JavaScript runtimes, PHP runtimes, and others.
-
-This repository is used to collect a list of ctf challenges of 'web-pwn' with the description, attachments, exp and writeups.
+The Browser Dojo is a collection of recent browser-related pwn challenges, including targets like V8, with the description, attachments, exp and writeups.
 
 *TODO: hope we can find another way of classification instead of the challenges. For the how2heap, they use heap exploitation techniques.*
+*TODO: I think putting this repo as one of the dojo in the pwn.college could be my envision by the end of year 2024*
 
 ## Overview
 
@@ -16,4 +15,4 @@ This repository is used to collect a list of ctf challenges of 'web-pwn' with th
 
 ## Deployment
 
-To ensure a smoother deployment process, I will supply Dockerfiles designed to create a self-contained environment, streamlining the building and debugging of the binary. Constructing a vulnerable version of the binary from 3 or 4 years ago involves more than just executing a git checkout command. Challenges often arise due to inconsistencies in your system environment and build scripts, which can lead to unexpected errors. By utilizing the Dockerfile, you can effectively address these issues in a contained environment, avoiding any disruption to your host machine's current configuration.
+Each challenge comes with a Dockerfile to create a ready-to-go environment for building and debugging. Getting a vulnerable version of a binary from a few years ago isn’t as simple as running a git checkout—you’ll probably run into system and script inconsistencies. By using the provided Dockerfile, you can sidestep these headaches and work in a clean, controlled environment without messing up your main setup.
