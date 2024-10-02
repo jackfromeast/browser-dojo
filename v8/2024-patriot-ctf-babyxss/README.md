@@ -1,5 +1,14 @@
 ## Writeup
 
+### Misc
+
++ Artifact: V8
++ Version: v11.9.99
++ Time: 2024-Sep-22
++ Description: Manually introduced oob vulnerability
++ CTF: PatriotCTF 2024
++ Challenge Name: babyxss
+
 ### Vulnerability
 
 The challenge manully introduced a vulnerability that allows us to achieve a out-of-bound read/write of an array.

