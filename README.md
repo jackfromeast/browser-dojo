@@ -7,10 +7,10 @@ The Browser Dojo is a collection of recent browser-related pwn challenges, inclu
 
 ## Overview
 
-| Artifact | Version | Time        | Vuln Description                      | CTF        | Challenge |
-| -------- | ------- | ----------- | ------------------------------------- | ---------- | --------- |
-| V8       | 7.5.0   | 2019-Apr-05 | Manually introduced oob vulnerability | \*CTF 2019 | oob-v8    |
-| V8       | 11.9.99 | 2024-Sep-22 | Manually introduced oob vulnerability | PatriotCTF 2024 | babyxss |
+| Artifact | Version | Writeup | Vuln Description                      | CTF        | Challenge |  Time  | 
+| -------- | ------- | ----------- | ------------------------------------- | ---------- | --------- | ----------- |
+| V8       | v7.5.0   | [Link](https://github.com/jackfromeast/browser-dojo/blob/main/v8/2019-star-ctf-oob-v8/README.md) | Manually introduced oob vulnerability | \*CTF 2019 | oob-v8    |  2019-Apr-05 |
+| V8       | v11.9.99 | [Link](https://github.com/jackfromeast/browser-dojo/blob/main/v8/2024-patriot-ctf-babyxss/README.md) | Manually introduced oob vulnerability | PatriotCTF 2024 | babyxss | 2024-Sep-22|
 
 
 ## Folder Layout
